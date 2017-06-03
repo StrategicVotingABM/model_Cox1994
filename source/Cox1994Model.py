@@ -1,6 +1,6 @@
 #-----------------------------------------------------------------------------#
 #
-# Strategic voting (Cox, 1994)
+# Strategic voting - replicating Cox (1994)
 #
 # Authors: Fabricio Vasselai & Samuel Baltz
 #
