@@ -5,7 +5,7 @@
 
 Reference:
 
-[Cox, Gary (1994). "Strategic Voting Equilibria Under the Single Nontransferable Vote". The American Political Science Review, Vol. 88, No. 3 (Sep., 1994), pp. 608-621.](https://www.jstor.org/stable/2944798?seq=1#page_scan_tab_contents)
+[Cox, Gary (1994). "Strategic Voting Equilibria Under the Single Nontransferable Vote". The American Political Science Review, Vol. 88, No. 3 (Sep., 1994), pp. 608-621.](https://github.com/StrategicVotingABM/model_Cox1994/blob/master/references/CoxSingleNonTransferableVote.pdf)
 
 
 (I am testing two ways to take notes and create a sharable list of TO-DOs and ideas for this project. I usually use Trello or Dynalist for such purposes)
