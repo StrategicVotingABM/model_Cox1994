@@ -1,6 +1,8 @@
 #-----------------------------------------------------------------------------#
 #
-# Strategic voting - replicating Cox (1994)
+# Strategic voting - replicating Cox, Gary (1994). "Strategic Voting
+#   Equilibria Under the Single Nontransferable Vote". The American Political
+#   Science Review, Vol. 88, No. 3 (Sep., 1994), pp. 608-621.
 #
 # Authors: Fabricio Vasselai & Samuel Baltz
 #
