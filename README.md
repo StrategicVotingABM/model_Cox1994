@@ -10,3 +10,7 @@ Reference:
 TO-DO list in Trello:
 
 https://trello.com/b/hIhIo9B6/strategicvoting
+
+TO-DO list in Dynalist:
+
+https://dynalist.io/d/zrC3SrXQB_Ho5cUOcSGRef-K
