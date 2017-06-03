@@ -1,1 +1,8 @@
-# Replication of Cox's model in "Strategic Voting Equilibria Under the Single Nontransferable Vote" using Agent-Based Models
+# Replication of Cox (1994) model using Agent-Based Models
+Reference:
+
+[Cox, Gary (1994). "Strategic Voting Equilibria Under the Single Nontransferable Vote". The American Political Science Review, Vol. 88, No. 3 (Sep., 1994), pp. 608-621.](https://www.jstor.org/stable/2944798?seq=1#page_scan_tab_contents)
+
+TO-DO list in Trello:
+
+https://trello.com/b/hIhIo9B6/strategicvoting
