@@ -1,15 +1,13 @@
 #-----------------------------------------------------------------------------#
 #
-# Strategic voting - replicating Cox, Gary (1994). "Strategic Voting
-#   Equilibria Under the Single Nontransferable Vote". The American Political
-#   Science Review, Vol. 88, No. 3 (Sep., 1994), pp. 608-621.
+# Strategic voting (Cox 1994)
 #
 # Authors: Fabricio Vasselai & Samuel Baltz
 #
 # Purpose: To replicate Cox 1994 SNTV as an ABM
 #
 # First created: 30 May 2017
-# Last modified: 31 May 2017
+# Last modified: 12 June 2017
 #
 #-----------------------------------------------------------------------------#
 
@@ -17,7 +15,8 @@
 #-----------------------------------------------------------------------------#
 #Import libraries:
 #-----------------------------------------------------------------------------#
-from random import randint
+
+from random import randint 
 
 
 #-----------------------------------------------------------------------------#
@@ -44,8 +43,8 @@ candidates = [None] * nCandidates
 #-----------------------------------------------------------------------------#
 def randPreference(minPreference, maxPreference):
     return randint(minPreference, maxPreference)
-    
-    
+
+
 #-----------------------------------------------------------------------------#
 #Candidate-owned Variables:
 #    preference: 1-D Preference which naively represents some generic position.
@@ -57,20 +56,26 @@ class Candidate:
     rank = 0
     
     def __init__(self, inID, inPreference):
+        self.ID = inID
         self.preference = inPreference
         
     def __eq__(self, another):
-        return self.rank == another.rank
+        return self.distance == another.distance
     
     def __lt__(self, another):
-        return self.rank < another.rank
+        return self.distance < another.distance
     
     def __gt__(self, another):
-        return self.rank > another.rank
+        return self.distance > another.distance
+    
+    def findDistance(self, candPreference, elecPreference):
+        self.distance = abs(candPreference - elecPreference)
     
     def setRank(self, inRank):
         self.rank = inRank
-        
+ 
+    def printCandPrefs(self):
+        print self.preference
     
 #-----------------------------------------------------------------------------#
 #Elector-owned Variables:
@@ -80,10 +85,15 @@ class Candidate:
 #-----------------------------------------------------------------------------#
 
 class Elector:
+    #Initialize elector variables and matrices
     preference = 0
     expectation = [None] * nCandidates
+    distances = [None] * nCandidates
+    candIDs = [None] * nCandidates
     rankedCandidates = [None] * nCandidates
+    orderedCands = [None] * nCandidates
     
+    #Define all elector-owned functions
     def __init__(self, inPreference):
         self.preference = inPreference
         
@@ -93,27 +103,28 @@ class Elector:
     def rankCandidates(self, inCandidates):
         for c in range(0, nCandidates):
             cand = inCandidates[c]
-            
-            print candidates[c].rank
-            
-            cand.setRank(self.preference - cand.preference)
-            
-            print cand.rank
-            
-            #print"Candidate " + str(c) + ": "  + str(self.preference - cand.preference)
-            
-            self.rankedCandidates[c] = cand
-            
-            #print"Candidate " + str(c) + ": "  + str(self.rankedCandidates[c].rank)
-            
-        #print self.rankedCandidates[0].rank
-        self.rankedCandidates.sort(reverse = True)
-        #print self.rankedCandidates[0].preference
-        
+            cand.findDistance(cand.preference, self.preference)
+            self.distances[c] = cand.distance
+            self.candIDs[c] = cand.ID
+            self.orderedCands[c] = cand
+        self.IDAndDist = zip(elec.distances, elec.candIDs, elec.orderedCands)
+        self.IDAndDist.sort()
+        for c in range(0, nCandidates):
+            self.rankedCandidates[c] = self.IDAndDist[c][2]
+
+         
     def printRankedCandidates(self):
-        cand = self.rankedCandidates[0]
-        print cand.preference
- 
+        for c in range(0, nCandidates):
+            cand = self.rankedCandidates[c]
+            print "candidate ID: " + str(cand.ID)
+            print "elector preference: " + str(self.preference)
+            print "candidate preference: " + str(cand.preference)
+            print "distance: " + str(cand.distance)
+            print "\n"
+            print "ranking: "
+        for c in range(0, nCandidates):
+            cand = self.rankedCandidates[c]
+            print elec.rankedCandidates[c].ID
         
 #-----------------------------------------------------------------------------#
 #Populate the world:
@@ -124,7 +135,6 @@ for c in range(0, nCandidates):
     pref = randPreference(minPreference,maxPreference)
     cand = Candidate(c, pref)
     candidates[c] = cand
-    #print cand.preference
 
 print  "\n"
 
@@ -133,19 +143,12 @@ for e in range(0, nElectors):
     elec = Elector(pref)
     elec.rankCandidates(candidates)
     electors[e] = elec
-    #print elec.preference
     
 print  "\n"
 
 for e in range(0, nElectors):    
     elec = electors[e]
     elec.printRankedCandidates()
-    
-    
-
-
-print "\nI compiled! :D\n"
-
 
 #TO-DO:
 #solve the problem of sorting candidates for ranking
@@ -153,6 +156,7 @@ print "\nI compiled! :D\n"
 #    each elector
 #implement random generation of preferences that are not uniform
 #update the strategic choice of each voter
+
 
 
 
