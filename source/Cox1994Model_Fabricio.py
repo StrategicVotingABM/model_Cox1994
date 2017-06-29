@@ -8,7 +8,11 @@
 # Purpose: To replicate Cox 1994 SNTV as an ABM
 #
 # First created: 30 May 2017
-# Last modified: 20 June 2017
+# Last modified: 28 June 2017
+#
+# Committ comment: The updating still does not converge to Cox's results;
+# needs to improve on how to relate preference distance between electors and
+# candidates and candidates' expected vote shares
 #
 #-----------------------------------------------------------------------------#
 
@@ -17,6 +21,7 @@
 # Import libraries:
 #-----------------------------------------------------------------------------#
 import random 
+#random.seed(2282) #set a specific pseudo-rng seed for reprocability
 
 
 #-----------------------------------------------------------------------------#
@@ -35,9 +40,6 @@ prefRange = maxPreference - minPreference
 
 electors = [None] * nElectors #list that stores the electors
 candidates = [None] * nCandidates #list that stores the candidates
-candExpecPerformance = [None] * nCandidates 
-
-intentionChanges = nElectors
 
 
 #-----------------------------------------------------------------------------#
@@ -120,7 +122,7 @@ class Candidate:
 # Elector-owned Variables:
 #    ID: an unique identification number for each candidate
 #    preference: 1-D preference which represents a generic policy position
-#    rankedCandidates: list of preference-ranked candidates                                                 #candidates
+#    rankedCandidates: list of preference-ranked candidates
 #    expectedValue: a vector with the elector's expectation for each candidate
 #                   winning the election
 #    chosenCandidate: candidate for which this elector would currently
@@ -174,7 +176,6 @@ class Elector:
 #-----------------------------------------------------------------------------#
 # Populating the world:
 #-----------------------------------------------------------------------------#
-#random.seed(2282)
 
 #Generate candidates:
 for c in range(0, nCandidates):
