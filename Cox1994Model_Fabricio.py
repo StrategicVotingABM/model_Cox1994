@@ -24,12 +24,13 @@ import random
 #-----------------------------------------------------------------------------#
 
 #Initialize parameters
-nElectors = 1000 #Number of electors
-nCandidates = 10 #Number of candidates
+nIterations = 100
+nElectors = 100 #Number of electors
+nCandidates = 5 #Number of candidates
 magnitude = 1 #Number of seats the candidates compete for
 
 minPreference = 0 #min value of 1-D preference of electors and candidates
-maxPreference = 10 #max value of 1-D preference of electors and candidates
+maxPreference = 100000 #max value of 1-D preference of electors and candidates
 prefRange = maxPreference - minPreference
 
 electors = [None] * nElectors #list that stores the electors
@@ -90,10 +91,9 @@ class Candidate:
             preferedCandidate = elector.rankedCandidates[0]
             if preferedCandidate.ID == self.ID:
                 votes += 1 #increment number of votes gathered
-        self.voteIntention = votes
         if self.sincereSupport == None:
-           self.sincereSupport = self.voteIntention
-
+           self.sincereSupport = votes
+        self.voteIntention = votes
 
     def winProbability(self):
         if self.voteIntention == None:
@@ -101,7 +101,6 @@ class Candidate:
         else:
             return (float(self.voteIntention) / float(nElectors))
 
-    
     #Candidate class printing functions to debug this class implementation:
     def printCandPrefs(self):
         print "Cand " + str(cand.ID) + "'s preference:" + str(self.preference)
@@ -110,7 +109,7 @@ class Candidate:
         print "Cand " +str(cand.ID) +" sincere votes: " +str(self.sincereSupport)
 
     def printvoteIntention(self):
-        print "Cand " +str(cand.ID) +" strategic votes: " +str(self.voteIntention)
+        print "Cand " +str(cand.ID) + " votes: " + str(self.voteIntention)
     
     def printWinProb(self):
         print "Cand " + str(cand.ID) + "'s winprob: " \
@@ -145,33 +144,32 @@ class Elector:
         for cand in inCandidates:
             #For now, we merely calculate distance between 1-D preferences from
             #this elector and the candidates:
-            distance = 1 + abs(cand.preference - self.preference)
+            distance = abs(cand.preference - self.preference)
             distances[index] = distance * (1 - cand.winProbability())
             index += 1
         sortedDistance = sorted(zip(distances, inCandidates))
         self.rankedCandidates = [inCandidates for (distances, inCandidates) \
                                  in  sortedDistance]
 
-    #Function that specifies how candidates make their stratigic choices:
+
+    #Function that specifies how candidates make their strategic choices:
     def chooseCandidate(self):
         self.chosenCandidate = self.rankedCandidates[0]
         return 1
             
     #Elector-class printing functions to debug this class implementation:   
     def printRankedCandidates(self):
-        print "elector: " + str(self.ID)
-        print "elector preference: " + str(self.preference) + "\n"
+        print "elector ID: " + str(self.ID),
+        print " preference: " + str(self.preference)
         for cand in candidates:
-            print "candidate ID: " + str(cand.ID)
-            print "candidate preference: " + str(cand.preference)
-            print "distance: " + str(1+abs(cand.preference - self.preference) * (1 - cand.winProbability()))
-        print "ranking: "
+            print "candidate ID: " + str(cand.ID),
+            print " preference: " + str(cand.preference),
+            print " distance: " + str(abs(cand.preference - self.preference) \
+                                       * (1 - cand.winProbability()))
+        print "ranking: ",
         print self.rankedCandidates
         print "\n"
 
-    def printExpectedU(self):
-        print "elector " + str(elec.ID) + "'s EV: " +str(self.expectedValue)
-                                        
 
 #-----------------------------------------------------------------------------#
 # Populating the world:
@@ -188,48 +186,27 @@ for c in range(0, nCandidates):
 for e in range(0, nElectors):
     pref = randPreference(minPreference,maxPreference)
     elector = Elector(e, pref)
-    elector.rankCandidates(candidates)
-    elector.chooseCandidate()
-    #if elector.ID == 0:
-        #elector.printRankedCandidates()
     electors[e] = elector
-
-
-#-----------------------------------------------------------------------------#
-# Determining the initial voting intentions, given sincere preferences:
-#-----------------------------------------------------------------------------#
-for cand in candidates:
-    cand.countVotes(electors)
-    #candExpecPerformance[c] = cand.winProbability()
-    #cand.printsincereSupport()
-    #cand.printWinProb()
-
+    
 
 #-----------------------------------------------------------------------------#
 # Main simulation loop:
 #-----------------------------------------------------------------------------#
 
-##while intentionChanges > 0:
-for i in range(0, 10):
-    intentionChanges = 0
+for iter in range(0, nIterations):
 
-    newlist = sorted(candidates, key=lambda x: x.voteIntention, reverse=True)    
-    print newlist
-
-    #for cand in candidates:
-    #    print "Vote intentions: " + str(cand.winProbability())
-    #print "\n"
-
+    #Update electoral choice (at iter == 0, it's the sincere preference,
+    #while after that is always strategic voting intention):
     for elector in electors:
         elector.rankCandidates(candidates)
         elector.chooseCandidate()
-        #if elector.ID == 0:
-        #    print i
-        #    elector.printRankedCandidates()
 
+    #Count current votes of candidates:
     for cand in candidates:
         cand.countVotes(electors)
-        #cand.printvoteIntention()
-        #cand.printWinProb()
+        #Show vote intention in the first and last iterations:
+        if iter == 0 or iter == nIterations - 1:
+            cand.printWinProb()
 
-        #intentionChanges = intentionChanges + elec.chooseCandidate
+    if iter == 0 or iter == nIterations - 1:
+        print "\n"
