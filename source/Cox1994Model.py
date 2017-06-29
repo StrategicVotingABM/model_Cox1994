@@ -34,6 +34,7 @@ nSeats = 1 #Number of seats the candidates compete for
 
 minPreference = 0
 maxPreference = 10
+prefRange = maxPreference - minPreference
 
 electors = [None] * nElectors
 candidates = [None] * nCandidates
@@ -58,8 +59,9 @@ class Candidate:
     preference = 0
     rank = 0
     sincereVotes = 0
-    winProb = 0.0
-    
+    winProb = 0
+    stratVotes = 0
+        
     def __init__(self, inID, inPreference):
         self.ID = inID
         self.preference = inPreference
@@ -78,31 +80,16 @@ class Candidate:
     
     def setRank(self, inRank):
         self.rank = inRank
- 
-    def countSincereVotes(self, inElectors):
-        for e in range(0, nElectors):
-            elec = inElectors[e]
-            if elec.IDAndDist[0][1] == self.ID:
-                self.sincereVotes = self.sincereVotes + 1
+        
+    #def countStratVotes(self, inElectors):
+    #    for e in range(0, nElectors):
+    #        elec = inElectors[e]
+    #        print "elector " + str(elec.ID) + " " + str(elec.expectedValue)
+    #        if elec.EUAndIDs[elec.expectedValue.index(max(elec.expectedValue))][0] == self.ID:
+    #            print elec.EUAndIDs[elec.expectedValue.index(max(elec.expectedValue))][0]
+    #            self.stratVotes = self.stratVotes + 1
 
-    def countSincereVotes(self, inElectors):
-        for e in range(0, nElectors):
-            elec = inElectors[e]
-            if elec.IDAndDist[0][1] == self.ID:
-                self.sincereVotes = self.sincereVotes + 1
-        self.winProb = float(self.sincereVotes) / float(nElectors)
-    
-    def countStratVotes(self, inElectors):
-        for e in range(0, nElectors):
-            elec = inElectors[e]
-
-    #def voteStrategically(self, inCandidates):
-    #    self.maxUtility = max(elec.expectedUtility)
-    #    self.nMaxSinCands = self.expectedUtility.count(self.maxUtility)
-    #    for c in range(0, nCandidates):
-    #        if self.nMaxSinCands == 1:
-    #        
-    #        if self.nMaxSinCands > 1:            
+                
 
     #Printing functions
     def printCandPrefs(self):
@@ -110,8 +97,13 @@ class Candidate:
     
     def printSincereVotes(self):
         print "Cand " +str(cand.ID) +" sincere votes: " +str(self.sincereVotes)
-        print "Cand " + str(cand.ID) + " win prob: " + str(self.winProb)
-                                
+
+    def printStratVotes(self):
+        print "Cand " +str(cand.ID) +" strategic votes: " +str(self.stratVotes)
+    
+    def printWinProb(self):
+        print "Cand " +str(cand.ID) + "'s winprob: " + str(cand.winProb)
+                                                                                                
 #-----------------------------------------------------------------------------#
 #Elector-owned Variables:
 #    preference: 1-D Preference which naively represents some generic position.
@@ -127,8 +119,8 @@ class Elector:
     candIDs = [None] * nCandidates
     rankedCandidates = [None] * nCandidates
     unorderedCands = [None] * nCandidates
-    candUtility = [None] * nCandidates
-    expectedUtility = [None] * nCandidates
+    candValue = [None] * nCandidates
+    expectedValue = [None] * nCandidates
             
     #Define all elector-owned functions
     def __init__(self, inID, inPreference):
@@ -146,12 +138,6 @@ class Elector:
         self.IDAndDist.sort()
         for c in range(0, nCandidates):
             self.rankedCandidates[c] = self.IDAndDist[c][2]
-
-    def expectUtility(self, inCandidates):
-        for c in range(0, nCandidates):
-            cand = inCandidates[c]
-            self.candUtility[c] = abs(self.preference - cand.preference)
-            self.expectedUtility[c] = cand.winProb * self.candUtility[c]                
             
     #Printing functions         
     def printRankedCandidates(self):
@@ -171,7 +157,7 @@ class Elector:
         print "\n \n"
 
     def printExpectedU(self):
-        print "elector " + str(elec.ID) + "' s EU: " +str(self.expectedUtility)
+        print "elector " + str(elec.ID) + "'s EV: " +str(self.expectedValue)
                                         
 #-----------------------------------------------------------------------------#
 #Populate the world:
@@ -189,22 +175,9 @@ for e in range(0, nElectors):
     elec = Elector(e, pref)
     electors[e] = elec
     elec.rankCandidates(candidates)
+    elec.printRankedCandidates()
 
-for c in range(0, nCandidates):
-    cand = candidates[c]
-    cand.countSincereVotes(electors)
-    cand.printSincereVotes()
-    
-for e in range(0, nElectors):
-    elec = electors[e]
-    elec.expectUtility(candidates)
-    elec.printExpectedU()
 
-#TO-DO:
-#calculate original expectation of votes for each candidates by looping over
-#    each elector
-#implement random generation of preferences that are not uniform
-#update the strategic choice of each voter
 
 
 
