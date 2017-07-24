@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>6372de58-37fd-41fb-85e2-1d1cce6d84c1</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>source\Cox1994Model_Fabricio2.py</StartupFile>
+    <StartupFile>source\Cox1994Model.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,9 +25,9 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="source\Cox1994Model.py" />
+    <Compile Include="source\Cox1994Model_old.py" />
     <Compile Include="source\Cox1994Model_Fabricio.py" />
-    <Compile Include="source\Cox1994Model_Fabricio2.py">
+    <Compile Include="source\Cox1994Model.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
