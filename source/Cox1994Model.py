@@ -6,12 +6,11 @@
 #
 # Purpose: To replicate Cox 1994 SNTV as an ABM
 #
-# First created: 30 May 2017
-# Last modified: 20 July 2017
+# Last modified: 24 July 2017
 #
-# Commit comment: The updating still does not converge to Cox's results;
-# needs to improve on how to relate preference distance between electors and
-# candidates and candidates' expected vote shares
+# Commit comment: The updating now converges to Cox's results most of the time
+# but not always. And without pre-cooking with distributions of preferences.
+# Still have to check which cases, and why, it fails.
 #
 #-----------------------------------------------------------------------------#
 
@@ -27,29 +26,27 @@ import random
 # Environmental or global variables
 #-----------------------------------------------------------------------------#
 
-#Initialize parameters
+#Initialize parameters:
 nIterations = 100
 nElectors = 1000 #Number of electors
 nCandidates = 5 #Number of candidates
-#magnitude = 1 #Number of seats the candidates compete for
-
 minPreference = 0 #min value of 1-D preference of electors and candidates
 maxPreference = 1 #max value of 1-D preference of electors and candidates
-prefRange = maxPreference - minPreference
-electors = [None] * nElectors #list that stores the electors
-candidates = [None] * nCandidates #list that stores the candidates
+allElectors = [None] * nElectors #list that stores the electors
+allCandidates = [None] * nCandidates #list that stores the candidates
 
 
 #-----------------------------------------------------------------------------#
 # Global functions:
 #-----------------------------------------------------------------------------#
 
-#Wrapper function to generalize the generation of random preferences. Late
+#Wrapper function to generalize the generation of random preferences. Later
 #we can simply alter its implementation to handle different randomization of
 #each preference dimension without having to change the rest of the code:
 def randPreference(minPreference, maxPreference):
     return random.uniform(minPreference, maxPreference)
 
+#Function to identify which list's element has the maximum value in the list:
 def argMax(inArray):
     argIndex = 0
     current = inArray[argIndex]
@@ -59,6 +56,7 @@ def argMax(inArray):
             argIndex = i
     return argIndex
 
+#Function to identify which list's element has the minimum value in the list:
 def argMin(inArray):
     argIndex = 0
     current = inArray[argIndex]
@@ -68,19 +66,22 @@ def argMin(inArray):
             argIndex = i
     return argIndex
 
-def countVoteIntentions(allCandidates, allElectors):
-    for candidate in allCandidates:
+#Function that counts vote intention of all candidates in the current moment.
+#The reason why it is a global function instead of a member function of either
+#Candidates or Electors classes if for performance: then we don't have to make
+#nCandidates x nElectors calculations:
+def countVoteIntentions(passedElectors, passedCandidates):
+    for candidate in passedCandidates:
         candidate.voteIntention = 0
-    for elector in allElectors:
-        allCandidates[elector.chooseCandidate()].voteIntention += 1
+    for elector in passedElectors:
+        chosenCandidate = elector.chooseCandidate()
+        chosenCandidate.voteIntention += 1
 
 
 #-----------------------------------------------------------------------------#
 # Candidate-owned Variables:
 #    ID: an unique identification number for each candidate
 #    preference: 1-D preference which represents a generic policy position
-#    sincereSupport: sincere votes the candidate would receive if no strategic
-#                  considerations were made by electors
 #    voteIntention: effective votes the candidate would currently receive if
 #                the election was held at the given iteration (starts at 0)
 #-----------------------------------------------------------------------------#
@@ -93,16 +94,6 @@ class Candidate:
         self.preference = passedPreference
         self.voteIntention = None
     
-    #overload of the equality check operator (==) for this class, in order to
-    #specify what does it mean for two candidates to be equal/different
-    def __eq__(self, another):
-        return self.ID == another.ID #equalness means having the same ID
-
-    #overloads the REPRESENTATION function, to specify what does it mean to
-    #print an instance of this class
-    def __repr__(self):
-        return str(self.ID) #printing a candidate will mean printing her ID
-    
     #Function that counts how many sincere votes a given candidate would gather
     #if there were no strategic behavior by the electors, that is, if only the
     #original distance between electors  and candidate's preferences were to
@@ -113,6 +104,7 @@ class Candidate:
         else:
             return (float(self.voteIntention) / float(nElectors))
      
+    #function that prints the candidates winning probability for debugging:
     def printWinProb(self):
         print "Cand " + str(cand.ID) + "'s winprob: " \
                       + str(cand.winProbability())
@@ -122,41 +114,48 @@ class Candidate:
 # Elector-owned Variables:
 #    ID: an unique identification number for each candidate
 #    preference: 1-D preference which represents a generic policy position
-#    rankedCandidates: list of preference-ranked candidates
-#    expectedValue: a vector with the elector's expectation for each candidate
-#                   winning the election
-#    chosenCandidate: candidate for which this elector would currently
-#                     cast her vote
+#    strategicUtilities: a list with the elector's sincere expectation for each
+#                        candidate
 #-----------------------------------------------------------------------------#
 
 class Elector:
     
     #overload of class constructor, that initializes elector-owned variables
-    def __init__(self, inID, inPreference):
-        self.ID = inID
-        self.preference = inPreference
-        self.sincereUtility = [None] * nCandidates
-                                  
-    def utilityFunction(self, inCand):
-        return maxPreference - abs(self.preference - inCand.preference)
+    def __init__(self, passedID, passedPreference):
+        self.ID = passedID
+        self.preference = passedPreference
+        self.strategicUtilities = [None] * nCandidates
+                              
+    #function that finds the sincere utility that this elector assigns
+    #for the passed candidate, i.e. without/before strategic considerations:                         
+    def utilityFunction(self, passedCandidate):
+        return maxPreference - abs(self.preference-passedCandidate.preference)
         
-    def calculateSincereUtility(self, inCandidates):
+    #calculate the sincere utility - that is, without/before strategic conside-
+    #rations - that this elector assigns for all candidates and stores them:
+    def calculatestrategicUtilities(self, passedCandidate):
         index = 0
-        for cand in inCandidates:
-            self.sincereUtility[index] = self.utilityFunction(cand)
+        for cand in passedCandidate:
+            self.strategicUtilities[index] = self.utilityFunction(cand)
             index += 1
-        self.sincereUtility[argMin(self.sincereUtility)] = 0
-        self.sincereUtility[:] = [x / sum(self.sincereUtility) for x in self.sincereUtility]
+        self.strategicUtilities[argMin(self.strategicUtilities)] = 0
+        self.strategicUtilities[:] = [x / sum(self.strategicUtilities)  \
+                                  for x in self.strategicUtilities]
             
-    def calculateStrategicUtility(self, inCandidates):
+    #calculate the strategic utility - that is, considering winning probabi-
+    #lities - that this elector assigns for all candidates and stores them:   
+    def calculateStrategicUtility(self, passedCandidate):
         index = 0
-        for cand in inCandidates:
-            self.sincereUtility[index] *= cand.winProbability()
+        for cand in passedCandidate:
+            self.strategicUtilities[index] *= cand.winProbability()
             index += 1
-        self.sincereUtility[:] = [x / sum(self.sincereUtility) for x in self.sincereUtility]
+        self.strategicUtilities[:] = [x / sum(self.strategicUtilities)  \
+                                  for x in self.strategicUtilities]
     
+    #find who is the currently chosen candidate, considering current strategic
+    #utility calculation:
     def chooseCandidate(self):
-        return argMax(self.sincereUtility)
+        return allCandidates[argMax(self.strategicUtilities)]
         
     
 #-----------------------------------------------------------------------------#
@@ -167,14 +166,14 @@ class Elector:
 for c in range(0, nCandidates):
     pref = randPreference(minPreference,maxPreference)
     cand = Candidate(c, pref)
-    candidates[c] = cand
+    allCandidates[c] = cand
 
 #Generate electors:
 for e in range(0, nElectors):
     pref = randPreference(minPreference,maxPreference)
     elector = Elector(e, pref)
-    elector.calculateSincereUtility(candidates)
-    electors[e] = elector
+    elector.calculatestrategicUtilities(allCandidates)
+    allElectors[e] = elector
     
 
 #-----------------------------------------------------------------------------#
@@ -183,16 +182,18 @@ for e in range(0, nElectors):
 
 for iter in range(0, nIterations):
 
-    #Update electoral choice (at iter == 0, it's the sincere preference,
-    #while after that is always strategic voting intention):
-    for elector in electors:
-        elector.calculateStrategicUtility(candidates)
+    #Update strategic utility considerations of electors, given the current
+    #winning probabilities of candidates:
+    for elector in allElectors:
+        elector.calculateStrategicUtility(allCandidates)
 
-    countVoteIntentions(candidates, electors)            
+    #count the vote intention of all electors towards all candidates for the
+    #current iterations:
+    countVoteIntentions(allElectors, allCandidates)            
     
-    #Show vote intention in the first and last iterations:
+    #Show vote intentions in the first and last iterations:
     if iter == 0 or iter == nIterations - 1:
-        for cand in candidates:
+        for cand in allCandidates:
             cand.printWinProb()
         print "\n"
         
