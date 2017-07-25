@@ -157,7 +157,7 @@ class Candidate:
 # Elector-owned Variables:
 #    ID: an unique identification number for each candidate
 #    preference: 1-D preference which represents a generic policy position
-#    strategicUtilities: a list with the elector's sincere expectation for each
+#    expectedUtilities: a list with the elector's sincere expectation for each
 #                        candidate
 #-----------------------------------------------------------------------------#
 
@@ -167,7 +167,7 @@ class Elector:
     def __init__(self, passedID, passedPreference):
         self.ID = passedID
         self.preference = passedPreference
-        self.strategicUtilities = [None] * nCandidates
+        self.expectedUtilities = [None] * nCandidates
                               
     #function that finds the sincere utility that this elector assigns
     #for the passed candidate, i.e. without/before strategic considerations:                         
@@ -180,26 +180,26 @@ class Elector:
     def calculateSincereUtilities(self, passedCandidate):
         index = 0
         for cand in passedCandidate:
-            self.strategicUtilities[index] = self.utilityFunction(cand)
+            self.expectedUtilities[index] = self.utilityFunction(cand)
             index += 1
-        self.strategicUtilities[argMin(self.strategicUtilities)] = 0
-        self.strategicUtilities[:] = [x / sum(self.strategicUtilities)        \
-                                  for x in self.strategicUtilities]
+        self.expectedUtilities[argMin(self.expectedUtilities)] = 0
+        self.expectedUtilities[:] = [x / sum(self.expectedUtilities)        \
+                                  for x in self.expectedUtilities]
             
     #calculate the strategic utility - that is, considering winning probabi-
     #lities - that this elector assigns for all candidates and stores them:   
     def calculateStrategicUtilities(self, passedCandidate):
         index = 0
         for cand in passedCandidate:
-            self.strategicUtilities[index] *= cand.winProbability()
+            self.expectedUtilities[index] *= cand.winProbability()
             index += 1
-        self.strategicUtilities[:] = [x / sum(self.strategicUtilities)        \
-                                  for x in self.strategicUtilities]
+        self.expectedUtilities[:] = [x / sum(self.expectedUtilities)        \
+                                  for x in self.expectedUtilities]
     
     #find who is the currently chosen candidate, considering current strategic
     #utility calculation:
     def chooseCandidate(self):
-        return allCandidates[argMax(self.strategicUtilities)]
+        return allCandidates[argMax(self.expectedUtilities)]
         
     
 #-----------------------------------------------------------------------------#
