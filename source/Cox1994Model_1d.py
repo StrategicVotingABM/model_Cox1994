@@ -22,10 +22,16 @@
 import random 
 #seed = random.randrange(sys.maxsize)
 seed = random.randint(0,10000)
+#seed = 7605
 #seed = 5330
 #seed = 6675
 #seed = 5895 #Good one
 #seed = 7145 #Third force becomes second
+#Debugging seeds:
+#seed= 4549 #nE=20, nC =3
+#seed= 8690 #nE=20, nC =3
+#seed= 2166 #nE=20, nC =2
+#seed= 3993 #nE=20, nC =2
 print "Seed: " + str(seed) + "\n"
 random.seed(seed)
 #random.seed(2282) #set a specific pseudo-rng seed for reprocability
@@ -36,8 +42,8 @@ random.seed(seed)
 #-----------------------------------------------------------------------------#
 
 #Initialize parameters:
-nElectors = 1000 #Number of electors
-nCandidates = 5 #Number of candidates
+nElectors = 100 #Number of electors
+nCandidates = 6 #Number of candidates
 minPreference = 0 #min value of 1-D preference of electors and candidates
 maxPreference = 100 #max value of 1-D preference of electors and candidates
 allElectors = [None] * nElectors #list that stores the electors
@@ -145,7 +151,7 @@ class Candidate:
         print "Cand " + str(self.ID) + "'s winprob: "                         \
                       + str(self.winProbability())
             
-    #function that prints 
+    #function that prints preferences
     def printPreference(self):
         roundedPref = str(round(self.preference, 2))
         print "Cand " + str(self.ID) + "'s preference: " + roundedPref
@@ -157,7 +163,7 @@ class Candidate:
 # Elector-owned Variables:
 #    ID: an unique identification number for each candidate
 #    preference: 1-D preference which represents a generic policy position
-#    expectedUtilities: a list with the elector's sincere expectation for each
+#    strategicUtilities: a list with the elector's sincere expectation for each
 #                        candidate
 #-----------------------------------------------------------------------------#
 
@@ -167,7 +173,8 @@ class Elector:
     def __init__(self, passedID, passedPreference):
         self.ID = passedID
         self.preference = passedPreference
-        self.expectedUtilities = [None] * nCandidates
+        self.strategicUtilities = [None] * nCandidates
+        self.sincereUtilities = [None] * nCandidates
                               
     #function that finds the sincere utility that this elector assigns
     #for the passed candidate, i.e. without/before strategic considerations:                         
@@ -180,26 +187,34 @@ class Elector:
     def calculateSincereUtilities(self, passedCandidate):
         index = 0
         for cand in passedCandidate:
-            self.expectedUtilities[index] = self.utilityFunction(cand)
+            self.sincereUtilities[index] = self.utilityFunction(cand)
             index += 1
-        self.expectedUtilities[argMin(self.expectedUtilities)] = 0
-        self.expectedUtilities[:] = [x / sum(self.expectedUtilities)        \
-                                  for x in self.expectedUtilities]
+        self.sincereUtilities[argMin(self.sincereUtilities)] = 0
+        self.sincereUtilities[:] = [x / sum(self.sincereUtilities)            \
+                                  for x in self.sincereUtilities]
             
     #calculate the strategic utility - that is, considering winning probabi-
     #lities - that this elector assigns for all candidates and stores them:   
     def calculateStrategicUtilities(self, passedCandidate):
         index = 0
         for cand in passedCandidate:
-            self.expectedUtilities[index] *= cand.winProbability()
+            self.strategicUtilities[index] = cand.winProbability()            \
+                                             * self.sincereUtilities[index]
             index += 1
-        self.expectedUtilities[:] = [x / sum(self.expectedUtilities)        \
-                                  for x in self.expectedUtilities]
     
     #find who is the currently chosen candidate, considering current strategic
     #utility calculation:
     def chooseCandidate(self):
-        return allCandidates[argMax(self.expectedUtilities)]
+        return allCandidates[argMax(self.strategicUtilities)]
+
+    #function that prints 
+    def printPreference(self):
+        roundedPref = str(round(self.preference, 2))
+        print "Elec " + str(self.ID) + "'s preference: " + roundedPref \
+              + ", preferedCand: " + str(self.chooseCandidate().ID) \
+              + ", leastCand: " + str(allCandidates[argMin(self.sincereUtilities)].ID)
+        if self.ID == nElectors - 1:
+            print "\n"
         
     
 #-----------------------------------------------------------------------------#
@@ -240,13 +255,15 @@ while not areListsIdentical(lastVoteIntentions, currentVoteIntentions)        \
     #winning probabilities of candidates:
     for elector in allElectors:
         elector.calculateStrategicUtilities(allCandidates)
+        #if iter == 0:
+        #    elector.printPreference()
 
     #count the vote intention of all electors towards all candidates for the
     #current iterations:
     currentVoteIntentions = countVoteIntentions(allElectors, allCandidates)            
 
     #Show vote intention shares in the first iteration:
-    if iter == 0:
+    if iter >= 0:
         printElectResultsAsOfNow(allCandidates)
     
     iter += 1
