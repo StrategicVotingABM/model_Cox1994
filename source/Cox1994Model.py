@@ -6,11 +6,7 @@
 #
 # Purpose: To replicate Cox 1994 SNTV as an ABM
 #
-# Last modified: 24 July 2017
-#
-# Commit comment: The updating now converges to Cox's results (without 
-# pre-cooking with distributions of preferences) most of the time. But not
-# always: often there are cases when electors converge 100% to one candidate.
+# Last modified: 31 July 2017
 #
 #-----------------------------------------------------------------------------#
 
@@ -20,6 +16,7 @@
 #-----------------------------------------------------------------------------#
 #import sys
 import numpy as np
+import matplotlib as plt
 import random 
 #seed = random.randrange(sys.maxsize)
 seed = random.randint(0,10000)
@@ -43,12 +40,13 @@ random.seed(seed)
 #-----------------------------------------------------------------------------#
 
 #Initialize parameters:
-nElectors = 10000 #Number of electors
+nElectors = 1000 #Number of electors
 nCandidates = 4 #Number of candidates
 minPreference = 0 #min value of 1-D preference of electors and candidates
 maxPreference = 100 #max value of 1-D preference of electors and candidates
 allElectors = [None] * nElectors #list that stores the electors
 allCandidates = [None] * nCandidates #list that stores the candidates
+leastCandidates = [0] * nCandidates
 
 #-----------------------------------------------------------------------------#
 # Global functions:
@@ -57,11 +55,27 @@ allCandidates = [None] * nCandidates #list that stores the candidates
 #Wrapper function to generalize the generation of random preferences. Later
 #we can simply alter its implementation to handle different randomization of
 #each preference dimension without having to change the rest of the code:
-def randPreference(minPreference, maxPreference):
+def randUtilities(minPreference, maxPreference):
     #Sample 1-D policy preference from an uniform distribution:
-    return random.uniform(minPreference, maxPreference)
+    #return np.random.uniform(minPreference, maxPreference, nCandidates)
     #Sample 1-D policy preference from a normal distribution:
-    #return  random.normalvariate(0,1)
+    return  np.random.normal(0, 1, nCandidates)
+    #Sample 1-d policy preference from one dirichlet distribution:
+    #return np.random.dirichlet((1,2,3,4), 1).transpose()
+    #Sample 1-d policy preference from two dirichlet distributions:
+    #coin = random.randint(0, 1)
+    #if coin == 0:
+    #    return np.random.dirichlet((1,2,3,4), 1).transpose()
+    #else:
+    #   return np.random.dirichlet((4,3,2,1), 1).transpose()
+    #Sample 1-d policy preference from three dirichlet distributions:
+    #coin = random.randint(0, 2)
+    #if coin == 0:
+    #    return np.random.dirichlet((1,2,3,4), 1).transpose()
+    #elif coin == 1:
+    #   return np.random.dirichlet((4,3,2,1), 1).transpose()
+    #else:
+    #   return np.random.dirichlet((1,4,2,3), 1).transpose()
     
 #Function that efficiently checks whether two lists are identical:
 def areListsIdentical(lhs, rhs):
@@ -119,7 +133,16 @@ def countVoteIntentions(passedElectors, passedCandidates):
         index += 1
     return newVoteIntentions
 
-
+def plotLeastCandidates(passedElectors):
+    for elector in passedElectors:
+        index = elector.findLastCand().ID
+        leastCandidates[index] += 1
+    #for elector in passedElectors:
+    #    leastCandidates.append(elector.chooseLastCand().ID)
+    plt.pyplot.bar(list(range(nCandidates)), leastCandidates, align='center', alpha=0.5)
+    print leastCandidates
+    
+    
 #-----------------------------------------------------------------------------#
 # Candidate-owned Variables:
 #    ID: an unique identification number for each candidate
@@ -131,9 +154,8 @@ def countVoteIntentions(passedElectors, passedCandidates):
 class Candidate:
             
     #overload of class constructor, that initializes candidate-owned variables
-    def __init__(self, passedID, passedPreference):
+    def __init__(self, passedID):
         self.ID = passedID
-        self.preference = passedPreference
         self.voteIntention = None
     
     #Function that counts how many sincere votes a given candidate would gather
@@ -151,14 +173,6 @@ class Candidate:
         print "Cand " + str(self.ID) + "'s winprob: "                         \
                       + str(self.winProbability())
             
-    #function that prints preferences
-    def printPreference(self):
-        roundedPref = str(round(self.preference, 2))
-        print "Cand " + str(self.ID) + "'s preference: " + roundedPref
-        if self.ID == nCandidates - 1:
-            print "\n"
-            
-            
 #-----------------------------------------------------------------------------#
 # Elector-owned Variables:
 #    ID: an unique identification number for each candidate
@@ -170,18 +184,15 @@ class Candidate:
 class Elector:
     
     #overload of class constructor, that initializes elector-owned variables
-    def __init__(self, passedID, passedPreference):
+    def __init__(self, passedID):
         self.ID = passedID
-        self.preference = passedPreference
         self.strategicUtilities = [None] * nCandidates
         self.sincereUtilities = [None] * nCandidates
-        self.rankings = [None] * nCandidates
-    
     
     #calculate the sincere utility - that is, without/before strategic conside-
     #rations - that this elector assigns for all candidates and stores them:
     def calculateSincereUtilities(self, passedCandidate):
-        self.sincereUtilities = np.random.normal(0, 1, nCandidates)
+        self.sincereUtilities = randUtilities(minPreference, maxPreference)
         self.sincereUtilities[argMin(self.sincereUtilities)] = 0
         self.sincereUtilities[:] = [x / sum(self.sincereUtilities)        \
                                   for x in self.sincereUtilities]
@@ -202,13 +213,15 @@ class Elector:
     #utility calculation:
     def chooseCandidate(self):
         return allCandidates[argMax(self.strategicUtilities)]
+    
+    def findLastCand(self):
+        return allCandidates[argMin(self.sincereUtilities)]
 
     #function that prints 
     def printPreference(self):
-        roundedPref = str(round(self.preference, 2))
-        print "Elec " + str(self.ID) + "'s preference: " + roundedPref \
+        print "Elec " + str(self.ID) \
               + ", preferedCand: " + str(self.chooseCandidate().ID) \
-              + ", leastCand: " + str(allCandidates[argMin(self.sincereUtilities)].ID)
+              + ", leastCand: " + str(self.findLastCand().ID)
         if self.ID == nElectors - 1:
             print "\n"
         
@@ -219,18 +232,16 @@ class Elector:
 
 #Generate candidates:
 for c in range(0, nCandidates):
-    pref = randPreference(minPreference,maxPreference)
-    cand = Candidate(c, pref)
+    cand = Candidate(c)
     allCandidates[c] = cand
-    cand.printPreference()
 
 #Generate electors:
 for e in range(0, nElectors):
-    pref = randPreference(minPreference,maxPreference)
-    elector = Elector(e, pref)
+    elector = Elector(e)
     elector.calculateSincereUtilities(allCandidates)
     allElectors[e] = elector
     
+plotLeastCandidates(allElectors)
 
 #-----------------------------------------------------------------------------#
 # Main simulation loop:
@@ -252,7 +263,7 @@ while not areListsIdentical(lastVoteIntentions, currentVoteIntentions)        \
     for elector in allElectors:
         elector.calculateStrategicUtilities(allCandidates)
         #if iter == 0:
-        #    elector.printPreference()
+         #   elector.printPreference()
 
     #count the vote intention of all electors towards all candidates for the
     #current iterations:
@@ -268,8 +279,7 @@ while not areListsIdentical(lastVoteIntentions, currentVoteIntentions)        \
 printElectResultsAsOfNow(allCandidates)
         
 print "Converged after " + str(iter - 1) + " iterations."
-
-                              
+                             
 #-----------------------------------------------------------------------------#
 # End of file
 #-----------------------------------------------------------------------------#

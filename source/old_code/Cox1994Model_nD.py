@@ -6,11 +6,7 @@
 #
 # Purpose: To replicate Cox 1994 SNTV as an ABM
 #
-# Last modified: 24 July 2017
-#
-# Commit comment: The updating now converges to Cox's results most of the time
-# but not always. And without pre-cooking with distributions of preferences.
-# Still have to check which cases, and why, it fails.
+# Last modified: 31 July 2017
 #
 #-----------------------------------------------------------------------------#
 
@@ -83,7 +79,7 @@ def countVoteIntentions(passedElectors, passedCandidates):
 
 def plotLeastCandidates(passedElectors):
     for elector in passedElectors:
-        index = elector.chooseLastCand().ID
+        index = elector.findLastCand().ID
         leastCandidates[index] += 1
     #for elector in passedElectors:
     #    leastCandidates.append(elector.chooseLastCand().ID)
@@ -184,13 +180,13 @@ class Elector:
     def chooseCandidate(self):
         return allCandidates[argMax(self.strategicUtilities)]
 
-    def chooseLastCand(self):
+    def findLastCand(self):
         return allCandidates[argMin(self.strategicUtilities)]
     
     #function that prints 
     def printPreference(self):
         print "Elec " + str(self.ID) + ", preferedCand: " + str(self.chooseCandidate().ID) \
-              + ", leastCand: " + str(self.chooseLastCand().ID)
+              + ", leastCand: " + str(self.findLastCand().ID)
         if self.ID == nElectors - 1:
             print "\n"
             
