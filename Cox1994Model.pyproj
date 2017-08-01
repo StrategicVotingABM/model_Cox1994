@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>6372de58-37fd-41fb-85e2-1d1cce6d84c1</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>source\Cox1994Model_1d.py</StartupFile>
+    <StartupFile>source\Cox1994Model.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -25,17 +25,17 @@
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="source\Cox1994Model_nD.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="source\Cox1994Model_old.py" />
-    <Compile Include="source\Cox1994Model_Fabricio.py" />
-    <Compile Include="source\Cox1994Model_1d.py">
-      <SubType>Code</SubType>
-    </Compile>
+    <Folder Include="source\" />
+    <Folder Include="source\old_code\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="source\" />
+    <Compile Include="source\Cox1994Model.py" />
+    <Compile Include="source\old_code\Cox1994Model.py" />
+    <Compile Include="source\old_code\Cox1994Model_1d.py" />
+    <Compile Include="source\old_code\Cox1994Model_Fabricio.py" />
+    <Compile Include="source\old_code\Cox1994Model_nD.py" />
+    <Compile Include="source\old_code\Cox1994Model_old.py" />
+    <Compile Include="source\old_code\Cox1994Model_Samuel.py" />
   </ItemGroup>
   <!-- Uncomment the CoreCompile target to enable the Build command in
        Visual Studio and specify your pre- and post-build commands in

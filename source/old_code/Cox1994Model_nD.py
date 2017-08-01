@@ -29,13 +29,13 @@ import numpy as np
 
 #Initialize parameters:
 nIterations = 1000
-nElectors = 1000 #Number of electors
+nElectors = 10 #Number of electors
 nCandidates = 5 #Number of candidates
 minPreference = 0 #min value of 1-D preference of electors and candidates
 maxPreference = 1 #max value of 1-D preference of electors and candidates
 allElectors = [None] * nElectors #list that stores the electors
 allCandidates = [None] * nCandidates #list that stores the candidates
-nPreferences = 5 #set the dimensionality of preferences
+nPreferences = nCandidates + 1 #set the dimensionality of preferences
 pref = [None] * nPreferences #initialize the preference vector
 
 #-----------------------------------------------------------------------------#
@@ -77,6 +77,7 @@ def countVoteIntentions(passedElectors, passedCandidates):
         candidate.voteIntention = 0
     for elector in passedElectors:
         chosenCandidate = elector.chooseCandidate()
+        lastCandidate = elector.chooseLastCand()
         chosenCandidate.voteIntention += 1
 
 
@@ -154,7 +155,11 @@ class Elector:
         self.strategicUtilities[argMin(self.strategicUtilities)] = 0
         self.strategicUtilities[:] = [x / sum(self.strategicUtilities)  \
                                   for x in self.strategicUtilities]
-            
+        print "elector" + str(self.ID) + "'s last candidate " +         \
+                                    str(argMin(self.strategicUtilities))
+        if elector.ID == nElectors - 1:
+            print "\n"
+                   
     #calculate the strategic utility - that is, considering winning probabi-
     #lities - that this elector assigns for all candidates and stores them:   
     def calculateStrategicUtility(self, passedCandidate):
@@ -169,7 +174,10 @@ class Elector:
     #utility calculation:
     def chooseCandidate(self):
         return allCandidates[argMax(self.strategicUtilities)]
-        
+
+    def chooseLastCand(self):
+        return allCandidates[argMin(self.strategicUtilities)]        
+                        
 #-----------------------------------------------------------------------------#
 # Populating the world:
 #-----------------------------------------------------------------------------#
