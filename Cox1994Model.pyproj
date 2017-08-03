@@ -30,6 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="source\Cox1994Model.py" />
+    <Compile Include="source\Cox1994Model_dist.py" />
     <Compile Include="source\old_code\Cox1994Model.py" />
     <Compile Include="source\old_code\Cox1994Model_1d.py" />
     <Compile Include="source\old_code\Cox1994Model_Fabricio.py" />
