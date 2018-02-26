@@ -17,7 +17,7 @@
 import sys
 import numpy as np
 
-seed = np.random.randint(0,sys.maxint)
+seed = np.random.randint(0,2**32 - 1)
 #seed = 7605
 #seed = 5330
 #seed = 6675
@@ -78,7 +78,7 @@ iter = 0 #iteration counter
 
 #Loop until convergence is met, i.e. in this simplistic version = when nothing
 #changes from one iteration to the next:
-while not areListsIdentical(lastVoteIntentions, currentVoteIntentions)        \
+while not GlobalFuncs.areIdentical(lastVoteIntentions, currentVoteIntentions) \
       or iter <= 1:
 
     lastVoteIntentions = currentVoteIntentions

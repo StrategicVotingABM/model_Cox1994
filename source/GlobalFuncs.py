@@ -35,7 +35,7 @@ def randUtilities(minPreference, maxPreference, nCandidates, distribution):
             return np.random.dirichlet((1,4,2,3), 1).transpose()
     
 #Function that efficiently checks whether two lists are identical:
-def areListsIdentical(lhs, rhs):
+def areIdentical(lhs, rhs):
     result = True
     if len(lhs) != len(rhs):
         result = False
@@ -98,6 +98,6 @@ def plotLeastCandidates(leastCandidates, passedElectors, passedCandidates):
         leastCandidates[index] += 1
     #for elector in passedElectors:
     #    leastCandidates.append(elector.chooseLastCand().ID)
-    plt.pyplot.bar(list(range(nCandidates)), leastCandidates,                 \
-                   align='center', alpha=0.5)
+    #plt.pyplot.bar(list(range(nCandidates)), leastCandidates,                 \
+    #               align='center', alpha=0.5)
     print leastCandidates
