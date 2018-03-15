@@ -55,9 +55,15 @@ class Elector:
                     self.pivotalityProbs[rowIndex,colIndex] = 1
                     self.winnerProbs[rowIndex,colIndex] = 1
                 else:
-                    self.tieProbs[rowIndex,colIndex] = skellam.pmf(0,self.othersVotes[rowIndex],self.othersVotes[colIndex])
-                    self.pivotalityProbs[rowIndex,colIndex] = skellam.pmf(-1,self.othersVotes[rowIndex],self.othersVotes[colIndex])
-                    self.winnerProbs[rowIndex,colIndex] = 1 - skellam.cdf(-1,self.othersVotes[rowIndex],self.othersVotes[colIndex])
+                    skellamA = self.othersVotes[rowIndex]
+                    skellamB = self.othersVotes[colIndex]
+                    if skellamA == 0:
+                        skellamA = 10**-100
+                    if skellamB == 0:
+                        skellamB = 10**-100
+                    self.tieProbs[rowIndex,colIndex] = skellam.pmf(0,skellamA,skellamB)
+                    self.pivotalityProbs[rowIndex,colIndex] = skellam.pmf(-1,skellamA,skellamB)
+                    self.winnerProbs[rowIndex,colIndex] = 1 - skellam.cdf(-1,skellamA,skellamB)
         #UNCOMMENT ONLY IN CASE OF PROBLEMS WITH 0 ENTRIES###############
         #for rowIndex in range(0,nCandidates):
         #    for colIndex in range(0,nCandidates):
@@ -76,9 +82,13 @@ class Elector:
                     probsProd = np.prod(probsWOutPair)
                     otherPivsSum = self.pivotalityProbs[rowIndex,colIndex] + self.winnerProbs[rowIndex,colIndex]
                     self.pivotalities[rowIndex,colIndex] = probsProd * otherPivsSum
+        if iteration == 0:
+            self.previousUtilities = self.sincereUtilities
+        else:
+            self.previousUtilities = self.strategicUtilities
         for cand in range(0,nCandidates):
             for otherCand in range(0,nCandidates):
-                utilityDiff = self.sincereUtilities[cand] - self.sincereUtilities[otherCand]
+                utilityDiff = self.previousUtilities[cand] - self.sincereUtilities[otherCand]
                 self.newUtilDiff[otherCand] = utilityDiff * self.pivotalities[cand,otherCand]
             self.newUtilitySum[cand] = np.sum(self.newUtilDiff)
         self.newUtilitySum[np.argmin(self.sincereUtilities)] = MIN_UTIL
