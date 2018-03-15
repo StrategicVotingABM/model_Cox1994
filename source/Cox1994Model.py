@@ -6,7 +6,7 @@
 #
 # Purpose: To replicate Cox 1994 SNTV as an ABM
 #
-# Last modified: 14 March 2018
+# Last modified: 15 March 2018
 #
 #-----------------------------------------------------------------------------#
 
@@ -18,7 +18,7 @@ import sys
 import numpy as np
 from scipy.stats import skellam
 
-seed = np.random.randint(0,sys.maxint - 1)
+seed = np.random.randint(0,2**32 - 1)
 print "Seed: " + str(seed) + "\n"
 np.random.seed(seed)
 
@@ -41,7 +41,8 @@ allCandidates = [None] * nCandidates #list that stores the candidates
 leastCandidates = [0] * nCandidates 
 MIN_UTIL = -10**10
 MAX_ITERATION = 100
-    
+
+
 #-----------------------------------------------------------------------------#
 # Populating the world:
 #-----------------------------------------------------------------------------#
@@ -55,12 +56,12 @@ for newCandidateID in range(0, nCandidates):
 for newElectorID in range(0, nElectors):
     elector = Elector(newElectorID, nCandidates)
     elector.calcSincereUtilities(allCandidates, minPreference,                \
-                                 maxPreference, "2dirichlets")
+                                 maxPreference, "uniform")
     allElectors[newElectorID] = elector
 
-print "Least preferred by: ",
-GlobalFuncs.plotLeastCandidates(leastCandidates, allElectors, allCandidates)
-print "\n"
+#print "Least preferred by: ",
+#GlobalFuncs.plotLeastCandidates(leastCandidates, allElectors, allCandidates)
+#print "\n"
 
 
 #-----------------------------------------------------------------------------#
@@ -80,11 +81,6 @@ while not GlobalFuncs.areIdentical(lastVoteIntentions, currentVoteIntentions) \
     
     #Update strategic utility considerations of electors, given the current
     #winning probabilities of candidates:
-#    for elector in allElectors:
-#        elector.calculateStrategicUtilities(allCandidates, nElectors)
-        #if iter == 0:
-         #   elector.printPreference()
-
     for elector in allElectors:
         elector.calculateStrategicUtilities(allCandidates,allElectors,MIN_UTIL,iter)
 
@@ -92,6 +88,11 @@ while not GlobalFuncs.areIdentical(lastVoteIntentions, currentVoteIntentions) \
     #current iterations:
     currentVoteIntentions = GlobalFuncs.countVoteIntentions(allElectors,      \
                                                         allCandidates,iter)            
+
+#    for elector in allElectors:
+#        if elector.ID == 0:
+#            print "iteration: " + str(iter)
+#            print "all votes: " + str(elector.allVotes)
 
     #Show vote intention shares in the first iteration:
     if iter == 0:
